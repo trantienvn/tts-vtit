@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VSS Chat Platform – Tuần 1: HTML/CSS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div class="lang-bar">
+        <button class="lang-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z"/></svg>
+            Tiếng Việt
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+    </div>
+
+    <div class="blob-bg"></div>
+
+    <div class="page">
+        <!-- LEFT -->
+        <div class="left-area">
+            <div class="illus-wrap">
+                <img src="../asset/image.png" alt="VSS Chat Platform" class="illus-img" />
+            </div>
+            <h2 class="left-title">Hệ thống quản lý chat đa nền tảng</h2>
+            <p class="left-sub">Tiết kiệm thời gian tư vấn và chăm sóc khách hàng</p>
+            <div class="dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-area">
+            <div class="form-card">
+
+                <div class="brand">
+                    <svg class="brand-icon" viewBox="0 0 52 52" fill="none">
+                        <rect width="52" height="52" rx="13" fill="#EE0033"/>
+                        <path d="M10 16a5 5 0 015-5h22a5 5 0 015 5v14a5 5 0 01-5 5H29l-3 5-3-5H15a5 5 0 01-5-5V16z" fill="white"/>
+                        <circle cx="20" cy="23" r="3" fill="#EE0033"/>
+                        <circle cx="32" cy="23" r="3" fill="#EE0033"/>
+                        <circle cx="21.5" cy="21.5" r="1.2" fill="white"/>
+                        <circle cx="33.5" cy="21.5" r="1.2" fill="white"/>
+                        <line x1="20" y1="11" x2="18" y2="6" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="17.5" cy="5" r="1.8" fill="white"/>
+                        <line x1="32" y1="11" x2="34" y2="6" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+                        <circle cx="34.5" cy="5" r="1.8" fill="white"/>
+                    </svg>
+                    <div>
+                        <div class="brand-name">VSS</div>
+                        <div class="brand-sub">Chat Platform</div>
+                    </div>
+                </div>
+
+                <!-- ĐĂNG NHẬP -->
+                <div class="panel" id="panel-login">
+                    <h1 class="form-title">Đăng nhập vào tài khoản của bạn</h1>
+                    <form novalidate>
+                        <div class="field">
+                            <input type="text" class="inp" placeholder="Nhập tài khoản" />
+                        </div>
+                        <div class="field pw-field">
+                            <input type="password" class="inp" id="pw1" placeholder="Nhập mật khẩu" />
+                            <button type="button" class="eye-btn" onclick="togglePw('pw1',this)">
+                                <svg class="eye off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                <svg class="eye on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <div class="row-between">
+                            <label class="cb-label" for="remember">
+                                <input type="checkbox" id="remember" class="cb" />
+                                <span class="cb-box"></span>
+                                Lưu mật khẩu
+                            </label>
+                            <a href="#" class="link-red small">Quên mật khẩu?</a>
+                        </div>
+                        <button type="submit" class="btn-submit">Đăng nhập</button>
+                        <p class="switch-text">Bạn chưa có tài khoản? <a href="#" class="link-red" id="go-register">Đăng ký</a></p>
+                    </form>
+                </div>
+
+                <!-- ĐĂNG KÝ -->
+                <div class="panel hidden" id="panel-register">
+                    <h1 class="form-title">Đăng ký trải nghiệm</h1>
+                    <form novalidate>
+                        <div class="row-2">
+                            <div class="field"><input type="text" class="inp" placeholder="Nhập họ của bạn" /></div>
+                            <div class="field"><input type="text" class="inp" placeholder="Nhập tên của bạn" /></div>
+                        </div>
+                        <div class="field"><input type="email" class="inp" placeholder="Nhập email làm việc" /></div>
+                        <div class="row-2">
+                            <div class="field"><input type="text" class="inp" placeholder="Nhập tên công ty" /></div>
+                            <div class="field sel-field">
+                                <select class="inp sel">
+                                    <option value="" disabled selected>Quốc gia</option>
+                                    <option>Việt Nam</option><option>Hoa Kỳ</option><option>Singapore</option><option>Nhật Bản</option>
+                                </select>
+                                <svg class="sel-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                        </div>
+                        <div class="field sel-field">
+                            <select class="inp sel">
+                                <option value="" disabled selected>Nhập lĩnh vực</option>
+                                <option>Công nghệ</option><option>Giáo dục</option><option>Y tế</option><option>Tài chính</option><option>Bán lẻ</option><option>Khác</option>
+                            </select>
+                            <svg class="sel-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        <div class="field"><input type="text" class="inp" placeholder="Vị trí làm việc" /></div>
+                        <div class="field"><input type="text" class="inp" placeholder="Mục đích bạn đến với website" /></div>
+                        <button type="submit" class="btn-submit">Đăng ký</button>
+                        <p class="switch-text">Bạn đã có tài khoản? <a href="#" class="link-red" id="go-login">Đăng nhập</a></p>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('go-register').addEventListener('click', e => {
+            e.preventDefault();
+            document.getElementById('panel-login').classList.add('hidden');
+            document.getElementById('panel-register').classList.remove('hidden');
+        });
+        document.getElementById('go-login').addEventListener('click', e => {
+            e.preventDefault();
+            document.getElementById('panel-register').classList.add('hidden');
+            document.getElementById('panel-login').classList.remove('hidden');
+        });
+        function togglePw(id, btn) {
+            const pw = document.getElementById(id);
+            const off = btn.querySelector('.eye.off');
+            const on = btn.querySelector('.eye.on');
+            if (pw.type === 'password') { pw.type = 'text'; off.style.display = 'none'; on.style.display = ''; }
+            else { pw.type = 'password'; off.style.display = ''; on.style.display = 'none'; }
+        }
+    </script>
+</body>
+</html>
