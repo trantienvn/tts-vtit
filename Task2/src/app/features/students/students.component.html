@@ -1,0 +1,169 @@
+<div class="students-wrapper">
+  <!-- Page Header & Action Controls -->
+  <div class="header-flex">
+    <div class="page-header">
+      <h1 class="page-title">Quản Lý Sinh Viên (Student Directory)</h1>
+      <p class="page-subtitle">Quản lý hồ sơ, lớp học, điểm GPA và trạng thái sinh viên</p>
+    </div>
+
+    <div class="action-buttons">
+      <button nz-button nzType="primary" (click)="openAddModal()">
+        <span nz-icon nzType="plus"></span> Thêm Sinh Viên Mới
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Filter Toolbar -->
+  <div class="card-panel toolbar-panel">
+    <div class="search-box">
+      <nz-input-group nzPrefixIcon="search">
+        <input type="text" nz-input placeholder="Tìm kiếm theo Mã SV, Họ tên hoặc Email..." [(ngModel)]="searchValue"
+          (ngModelChange)="onSearchChange()" />
+      </nz-input-group>
+    </div>
+  </div>
+
+  <!-- Table Container with Loading Spinner -->
+  <div class="card-panel table-panel">
+    <nz-spin [nzSpinning]="isLoading">
+      <nz-table #studentTable [nzData]="(students$ | async) || []" [nzPageSize]="5" nzShowSizeChanger nzShowPagination>
+        <thead>
+          <tr>
+            <th>Mã SV</th>
+            <th>Họ và Tên</th>
+            <th>Email</th>
+            <th>Giới Tính</th>
+            <th>Lớp</th>
+            <th>GPA</th>
+            <th>Trạng Thái</th>
+            <th nzAlign="center">Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let student of studentTable.data">
+            <td><strong class="student-id">{{ student.id }}</strong></td>
+            <td>
+              <div class="student-avatar-cell">
+                <span class="avatar-circle">{{ student.name.charAt(0) }}</span>
+                <span class="student-name">{{ student.name }}</span>
+              </div>
+            </td>
+            <td>{{ student.email }}</td>
+            <td>{{ student.gender }}</td>
+            <td><nz-tag>{{ student.className }}</nz-tag></td>
+            <td>
+              <span class="gpa-score" [ngClass]="{ 'gpa-high': student.gpa >= 3.5, 'gpa-mid': student.gpa < 3.5 }">
+                {{ student.gpa | number:'1.2-2' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-success': student.status === 'Active',
+                'badge-purple': student.status === 'Graduated',
+                'badge-error': student.status === 'Suspended'
+              }">
+                {{ student.status }}
+              </span>
+            </td>
+            <td nzAlign="center">
+              <div class="table-actions">
+                <button nz-button nzType="text" nzSize="small" (click)="openEditModal(student)">
+                  <span nz-icon nzType="edit" style="color: #1890ff;"></span>
+                </button>
+                <button nz-button nzType="text" nzSize="small" nz-popconfirm
+                  nzPopconfirmTitle="Bạn có chắc chắn muốn xóa sinh viên này?" nzOkText="Xóa" nzCancelText="Hủy"
+                  (nzOnConfirm)="deleteStudent(student.id)">
+                  <span nz-icon nzType="delete" style="color: #ff4d4f;"></span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </nz-spin>
+  </div>
+</div>
+
+<!-- Student Form Modal (NgZorro Form + Reactive Forms) -->
+<nz-modal [(nzVisible)]="isModalVisible" [nzTitle]="isEditMode ? 'Cập Nhật Thông Tin Sinh Viên' : 'Thêm Sinh Viên Mới'"
+  (nzOnCancel)="handleModalCancel()" (nzOnOk)="submitForm()" [nzOkLoading]="isLoading" nzWidth="600px">
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="studentForm" nzLayout="vertical">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Họ tên -->
+        <nz-form-item>
+          <nz-form-label nzRequired>Họ và Tên</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập họ tên (tối thiểu 3 ký tự)">
+            <input nz-input formControlName="name" placeholder="Nguyễn Văn A" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- Email -->
+        <nz-form-item>
+          <nz-form-label nzRequired>Email</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng nhập đúng định dạng Email">
+            <input nz-input formControlName="email" placeholder="example@vtit.edu.vn" />
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Giới tính -->
+        <nz-form-item>
+          <nz-form-label nzRequired>Giới Tính</nz-form-label>
+          <nz-form-control>
+            <nz-radio-group formControlName="gender">
+              <label nz-radio nzValue="Nam">Nam</label>
+              <label nz-radio nzValue="Nữ">Nữ</label>
+              <label nz-radio nzValue="Khác">Khác</label>
+            </nz-radio-group>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- Lớp -->
+        <nz-form-item>
+          <nz-form-label nzRequired>Lớp Học</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="className">
+              <nz-option nzValue="CNTT-K65" nzLabel="CNTT-K65"></nz-option>
+              <nz-option nzValue="KTPM-K65" nzLabel="KTPM-K65"></nz-option>
+              <nz-option nzValue="KTPM-K64" nzLabel="KTPM-K64"></nz-option>
+              <nz-option nzValue="HTTT-K66" nzLabel="HTTT-K66"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <!-- Ngày sinh -->
+        <nz-form-item>
+          <nz-form-label nzRequired>Ngày Sinh</nz-form-label>
+          <nz-form-control nzErrorTip="Vui lòng chọn ngày sinh">
+            <nz-date-picker formControlName="birthDate" style="width: 100%;"></nz-date-picker>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- Điểm GPA -->
+        <nz-form-item>
+          <nz-form-label nzRequired>GPA</nz-form-label>
+          <nz-form-control>
+            <nz-input-number formControlName="gpa" [nzMin]="0" [nzMax]="4.0" [nzStep]="0.1"
+              style="width: 100%;"></nz-input-number>
+          </nz-form-control>
+        </nz-form-item>
+
+        <!-- Trạng thái -->
+        <nz-form-item>
+          <nz-form-label nzRequired>Trạng Thái</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="status">
+              <nz-option nzValue="Active" nzLabel="Active"></nz-option>
+              <nz-option nzValue="Graduated" nzLabel="Graduated"></nz-option>
+              <nz-option nzValue="Suspended" nzLabel="Suspended"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </div>
+    </form>
+  </ng-container>
+</nz-modal>

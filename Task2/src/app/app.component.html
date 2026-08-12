@@ -1,0 +1,57 @@
+<nz-layout class="app-layout">
+  <!-- Top Red Header -->
+  <nz-header class="app-header">
+    <div class="brand-container">
+      <span class="brand-title">Task2</span>
+    </div>
+    <div class="header-actions">
+      <div class="user-profile">
+        <span nz-icon nzType="user"></span>
+        <span>Admin</span>
+      </div>
+    </div>
+  </nz-header>
+
+  <!-- Main Body split into Sidebar (Left) and Content Column (Right) -->
+  <nz-layout class="main-body-layout">
+    <!-- Left Sidebar -->
+    <nz-sider nzWidth="220px" class="app-sider" nzTheme="light">
+      <ul nz-menu nzMode="inline" class="sider-menu">
+        <li nz-menu-item nzMatchRouter>
+          <a routerLink="/dashboard">
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li nz-menu-item nzMatchRouter>
+          <a routerLink="/students">
+            <span>Students</span>
+          </a>
+        </li>
+        <li nz-menu-item nzMatchRouter>
+          <a routerLink="/rxjs-demo">
+            <span>RxJS Demo</span>
+          </a>
+        </li>
+      </ul>
+    </nz-sider>
+
+    <!-- Right Side Column (Breadcrumb Top Bar + Content Below) -->
+    <nz-layout class="right-column-layout">
+      <!-- Breadcrumb Bar -->
+      <div class="breadcrumb-bar">
+        <nz-breadcrumb class="app-breadcrumb">
+          <nz-breadcrumb-item>
+            <span nz-icon nzType="home"></span>
+          </nz-breadcrumb-item>
+          <nz-breadcrumb-item>App</nz-breadcrumb-item>
+          <nz-breadcrumb-item>{{ currentRouteName }}</nz-breadcrumb-item>
+        </nz-breadcrumb>
+      </div>
+
+      <!-- Main Content Container -->
+      <nz-content class="app-content-container animate-fade-in">
+        <router-outlet></router-outlet>
+      </nz-content>
+    </nz-layout>
+  </nz-layout>
+</nz-layout>

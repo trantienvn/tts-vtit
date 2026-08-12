@@ -1,0 +1,133 @@
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header - Bold Red Theme */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ee0033;
+  padding: 0 24px;
+  height: 64px;
+  box-shadow: 0 2px 8px rgba(238, 0, 51, 0.25);
+  z-index: 10;
+  width: 100%;
+
+  .brand-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .brand-title {
+      color: #ffffff;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #ffffff;
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+    }
+  }
+}
+
+/* Main Body: Sidebar + Right Column */
+.main-body-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+/* Left Sidebar */
+.app-sider {
+  background: #ffffff;
+  border-right: 1px solid #ebe5e5;
+
+  .sider-menu {
+    height: 100%;
+    border-right: none;
+    padding-top: 16px;
+
+    ::ng-deep .ant-menu-item {
+      margin: 6px 12px;
+      width: calc(100% - 24px);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #1f2937;
+      transition: all 0.2s ease;
+
+      a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #1f2937;
+      }
+
+      &.ant-menu-item-selected {
+        background: #ffe6e6;
+        color: #ee0033;
+        font-weight: 700;
+
+        a {
+          color: #ee0033;
+        }
+
+        &::after {
+          border-right: 3px solid #ee0033;
+        }
+      }
+
+      &:active {
+        background-color: #ffe6e6;
+      }
+    }
+  }
+}
+
+/* Right Column Layout */
+.right-column-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f4f6f9;
+}
+
+/* Breadcrumb Bar */
+.breadcrumb-bar {
+  background: #ffffff;
+  padding: 16px 28px;
+  border-bottom: 1px solid #ebe5e5;
+
+  .app-breadcrumb {
+    font-size: 0.875rem;
+  }
+}
+
+/* Content Container */
+.app-content-container {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}

@@ -1,0 +1,122 @@
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.alert-banner {
+  border-radius: var(--border-radius-sm);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: var(--border-radius-md, 10px);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #e5e7eb;
+  transition: var(--transition-base);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .stat-info {
+    display: flex;
+    flex-direction: column;
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted, #9ca3af);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--heading-color, #1f2937);
+      margin: 2px 0;
+    }
+
+    .stat-change {
+      font-size: 0.75rem;
+      font-weight: 600;
+
+      &.positive { color: #52c41a; }
+      &.negative { color: #ff4d4f; }
+    }
+  }
+}
+
+.dashboard-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 24px;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--heading-color, #1f2937);
+  margin-bottom: 20px;
+}
+
+.card-header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  .card-title {
+    margin-bottom: 0;
+  }
+}
+
+.progress-card {
+  .progress-item {
+    margin-bottom: 20px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-color);
+
+      .percentage {
+        font-weight: 600;
+        color: var(--heading-color);
+      }
+    }
+  }
+}

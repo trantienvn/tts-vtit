@@ -1,0 +1,81 @@
+.students-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .page-header {
+    margin-bottom: 0;
+  }
+}
+
+.toolbar-panel {
+  padding: 16px 20px;
+
+  .search-box {
+    max-width: 400px;
+  }
+}
+
+.table-panel {
+  padding: 0;
+  overflow: hidden;
+
+  ::ng-deep .ant-table {
+    border-radius: var(--border-radius-md);
+  }
+}
+
+.student-id {
+  color: #1890ff;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.student-avatar-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e6f7ff;
+    color: #1890ff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .student-name {
+    font-weight: 500;
+    color: var(--heading-color);
+  }
+}
+
+.gpa-score {
+  font-weight: 700;
+
+  &.gpa-high {
+    color: #52c41a;
+  }
+
+  &.gpa-mid {
+    color: #faad14;
+  }
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}

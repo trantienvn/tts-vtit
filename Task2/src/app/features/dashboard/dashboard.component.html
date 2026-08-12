@@ -1,0 +1,124 @@
+<div class="dashboard-wrapper">
+  <!-- System Alert Notice -->
+  <nz-alert nzType="info" nzMessage="Dự án demo Task2." nzShowIcon nzCloseable class="alert-banner"></nz-alert>
+
+  <!-- Header Title -->
+  <div class="page-header">
+    <h1 class="page-title">Dashboard Overview</h1>
+    <p class="page-subtitle">Real-time statistics & learning analytics</p>
+  </div>
+
+  <!-- Metric Cards Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: #1890ff15; color: #1890ff;">
+        <span nz-icon nzType="user"></span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Tổng Sinh Viên</span>
+        <h2 class="stat-value">{{ totalStudents$ | async }}</h2>
+        <span class="stat-change positive">+12% từ tháng trước</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: #52c41a15; color: #52c41a;">
+        <span nz-icon nzType="check-circle"></span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Đang Hoạt Động</span>
+        <h2 class="stat-value">{{ activeStudents$ | async }}</h2>
+        <span class="stat-change positive">Đạt chuẩn chuyên cần</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: #722ed115; color: #722ed1;">
+        <span nz-icon nzType="trophy"></span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Đã Tốt Nghiệp</span>
+        <h2 class="stat-value">{{ graduatedStudents$ | async }}</h2>
+        <span class="stat-change positive">+4 sinh viên mới</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background-color: #faad1415; color: #faad14;">
+        <span nz-icon nzType="field-time"></span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">Tỷ Lệ Hoàn Thành</span>
+        <h2 class="stat-value">76.5%</h2>
+        <span class="stat-change positive">+3.2% cải thiện</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Section: Progress & Recent Activity -->
+  <div class="dashboard-content-grid">
+    <!-- Course Completion Progress Card -->
+    <div class="card-panel progress-card">
+      <h3 class="card-title">Tiến Độ Lộ Trình Đào Tạo</h3>
+
+      <div class="progress-item">
+        <div class="progress-header">
+          <span>Tuần 1: Angular Standalone & NgZorro</span>
+          <span class="percentage">100%</span>
+        </div>
+        <nz-progress [nzPercent]="100" nzStatus="success" [nzStrokeColor]="'#52c41a'"></nz-progress>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-header">
+          <span>Tuần 2: RxJS Operators & Advanced Filtering</span>
+          <span class="percentage">45%</span>
+        </div>
+        <nz-progress [nzPercent]="45" nzStatus="active" [nzStrokeColor]="'#1890ff'"></nz-progress>
+      </div>
+
+      <div class="progress-item">
+        <div class="progress-header">
+          <span>Tuần 3: Backend API Integration & Error Handling</span>
+          <span class="percentage">15%</span>
+        </div>
+        <nz-progress [nzPercent]="15" [nzStrokeColor]="'#722ed1'"></nz-progress>
+      </div>
+    </div>
+
+    <!-- Recent Activities Table -->
+    <div class="card-panel activity-card">
+      <div class="card-header-flex">
+        <h3 class="card-title">Danh Sách Sinh Viên Gần Đây</h3>
+        <button nz-button nzType="link">Xem tất cả</button>
+      </div>
+
+      <nz-table #basicTable [nzData]="(recentStudents$ | async) || []" [nzShowPagination]="false" nzSize="small">
+        <thead>
+          <tr>
+            <th>Mã SV</th>
+            <th>Họ và Tên</th>
+            <th>Lớp</th>
+            <th>Trạng Thái</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of basicTable.data">
+            <td><strong>{{ item.id }}</strong></td>
+            <td>{{ item.name }}</td>
+            <td><nz-tag>{{ item.className }}</nz-tag></td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-success': item.status === 'Active',
+                'badge-purple': item.status === 'Graduated',
+                'badge-error': item.status === 'Suspended'
+              }">
+                {{ item.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </div>
+  </div>
+</div>

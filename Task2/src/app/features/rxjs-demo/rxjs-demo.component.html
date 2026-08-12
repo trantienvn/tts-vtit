@@ -1,0 +1,99 @@
+<div class="rxjs-wrapper">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1 class="page-title">RxJS Reactive Streams Playground</h1>
+    <p class="page-subtitle">Demonstrating Observable, Observer, Subscription, BehaviorSubject, and debounceTime</p>
+  </div>
+
+  <div class="demo-grid">
+    <!-- Stream Controllers Panel -->
+    <div class="left-column">
+      <!-- Counter Stream Card -->
+      <div class="card-panel demo-card">
+        <div class="card-header">
+          <span nz-icon nzType="number" class="card-icon primary"></span>
+          <h3>BehaviorSubject Counter Stream</h3>
+        </div>
+
+        <div class="counter-display">
+          <span class="counter-value">{{ counter$ | async }}</span>
+        </div>
+
+        <div class="button-group">
+          <button nz-button nzType="primary" (click)="increment()">
+            <span nz-icon nzType="plus"></span> Increment
+          </button>
+          <button nz-button (click)="decrement()">
+            <span nz-icon nzType="minus"></span> Decrement
+          </button>
+          <button nz-button (click)="resetCounter()">
+            <span nz-icon nzType="reload"></span> Reset
+          </button>
+          <button
+            nz-button
+            [nzDanger]="isTimerRunning"
+            (click)="toggleAutoTimer()"
+          >
+            <span nz-icon [nzType]="isTimerRunning ? 'pause' : 'caret-right'"></span>
+            {{ isTimerRunning ? 'Stop Interval' : 'Start Interval (1s)' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Debounce Stream Card -->
+      <div class="card-panel demo-card">
+        <div class="card-header">
+          <span nz-icon nzType="search" class="card-icon purple"></span>
+          <h3>Subject + debounceTime(400ms) Stream</h3>
+        </div>
+
+        <div class="input-section">
+          <nz-input-group nzPrefixIcon="thunderbolt">
+            <input
+              type="text"
+              nz-input
+              placeholder="Nhập chữ nhanh để thấy hiệu ứng debounceTime..."
+              [(ngModel)]="searchValue"
+              (ngModelChange)="onSearchInput($event)"
+            />
+          </nz-input-group>
+        </div>
+
+        <div class="stream-result-box">
+          <span class="result-label">Giá trị Debounced vừa phát ra:</span>
+          <span class="result-value">{{ debouncedSearchValue || '(đang chờ dữ liệu nhập...)' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Stream Console Log -->
+    <div class="card-panel log-console-panel">
+      <div class="console-header">
+        <div class="console-title">
+          <span nz-icon nzType="code" class="console-icon"></span>
+          <h3>Reactive Stream Event Log (Observer Output)</h3>
+        </div>
+        <button nz-button nzSize="small" (click)="clearLogs()">Clear Log</button>
+      </div>
+
+      <div class="console-body">
+        <div *ngIf="logs.length === 0" class="empty-log">
+          Chưa có sự kiện stream nào phát ra. Hãy tương tác với các nút ở bên trái.
+        </div>
+
+        <div class="log-item animate-fade-in" *ngFor="let log of logs">
+          <span class="log-time">[{{ log.timestamp }}]</span>
+          <span class="badge" [ngClass]="{
+            'badge-primary': log.type === 'info',
+            'badge-success': log.type === 'success',
+            'badge-warning': log.type === 'warning',
+            'badge-error': log.type === 'error'
+          }">
+            {{ log.source }}
+          </span>
+          <span class="log-value">➔ {{ log.value }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
