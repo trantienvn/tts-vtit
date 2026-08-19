@@ -15,11 +15,15 @@
 
   <!-- Search & Filter Toolbar -->
   <div class="card-panel toolbar-panel">
-    <div class="search-box">
-      <nz-input-group nzPrefixIcon="search">
-        <input type="text" nz-input placeholder="Tìm kiếm theo Mã SV, Họ tên hoặc Email..." [(ngModel)]="searchValue"
-          (ngModelChange)="onSearchChange()" />
+    <div class="search-box" style="display: flex; align-items: center; gap: 16px; width: 100%;">
+      <nz-input-group nzPrefixIcon="search" style="max-width: 450px;">
+        <input type="text" nz-input placeholder="Gõ để tìm kiếm (đã áp dụng debounceTime 350ms & switchMap)..." [formControl]="searchControl" />
       </nz-input-group>
+
+      <div class="search-status-info" style="font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px;">
+        <nz-badge [nzStatus]="isLoading ? 'processing' : 'success'"></nz-badge>
+        <span>{{ searchStatusText }}</span>
+      </div>
     </div>
   </div>
 

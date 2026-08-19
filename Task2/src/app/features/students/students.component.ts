@@ -1,8 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, switchMap, takeUntil, tap, map, startWith } from 'rxjs/operators';
 
 // NG-ZORRO Modules
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -12,8 +12,8 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
-import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
-import { NzDrawerModule, NzDrawerService } from 'ng-zorro-antd/drawer';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
@@ -22,6 +22,8 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzRadioModule } from 'ng-zorro-antd/radio';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
+import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
+import { NzBadgeModule } from 'ng-zorro-antd/badge';
 
 import { StudentService } from '../../core/services/student.service';
 import { Student } from '../../core/models/student.model';
@@ -47,20 +49,27 @@ import { Student } from '../../core/models/student.model';
     NzSelectModule,
     NzRadioModule,
     NzDatePickerModule,
-    NzInputNumberModule
+    NzInputNumberModule,
+    NzTooltipModule,
+    NzBadgeModule
   ],
   templateUrl: './students.component.html',
   styleUrl: './students.component.scss'
 })
-export class StudentsComponent implements OnInit {
+export class StudentsComponent implements OnInit, OnDestroy {
   private studentService = inject(StudentService);
   private fb = inject(FormBuilder);
   private message = inject(NzMessageService);
   private notification = inject(NzNotificationService);
 
+  // Subject for takeUntil unsubscribe pattern
+  private destroy$ = new Subject<void>();
+  private refresh$ = new BehaviorSubject<void>(undefined);
+
+  searchControl = new FormControl('', { nonNullable: true });
   students$!: Observable<Student[]>;
-  searchValue = '';
   isLoading = false;
+  searchStatusText = 'Sẵn sàng tìm kiếm...';
 
   // Modal State
   isModalVisible = false;
@@ -70,7 +79,7 @@ export class StudentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadStudents();
+    this.setupReactiveSearch();
   }
 
   initForm(): void {
@@ -85,20 +94,39 @@ export class StudentsComponent implements OnInit {
     });
   }
 
-  loadStudents(): void {
-    this.students$ = this.studentService.getStudents().pipe(
-      map(list => {
-        if (!this.searchValue.trim()) return list;
-        const q = this.searchValue.toLowerCase();
-        return list.filter(
-          s => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || s.id.toLowerCase().includes(q)
-        );
-      })
+  // Week 2 Task 2 & 4: Reactive Search with valueChanges + debounceTime + distinctUntilChanged + filter + switchMap
+  setupReactiveSearch(): void {
+    this.students$ = this.refresh$.pipe(
+      takeUntil(this.destroy$),
+      switchMap(() =>
+        this.searchControl.valueChanges.pipe(
+          startWith(this.searchControl.value),
+          debounceTime(350),
+          distinctUntilChanged(),
+          filter(term => {
+            // Valid filter: string length must be 0 (reset/show all) or >= 2 chars
+            const trimmed = term.trim();
+            const isValid = trimmed.length === 0 || trimmed.length >= 2;
+            if (!isValid) {
+              this.searchStatusText = 'Nhập ít nhất 2 ký tự để tìm kiếm...';
+            }
+            return isValid;
+          }),
+          tap(term => {
+            this.isLoading = true;
+            this.searchStatusText = term ? `Đang tìm kiếm "${term}"...` : 'Hiển thị tất cả sinh viên';
+          }),
+          switchMap(term => this.studentService.searchStudents(term)),
+          tap(() => {
+            this.isLoading = false;
+          })
+        )
+      )
     );
   }
 
-  onSearchChange(): void {
-    this.loadStudents();
+  reloadList(): void {
+    this.refresh$.next();
   }
 
   openAddModal(): void {
@@ -106,7 +134,7 @@ export class StudentsComponent implements OnInit {
     this.currentStudentId = null;
     this.studentForm.reset({
       gender: 'Nam',
-      className: 'CNTT-K65',
+      className: 'CNTT K22A',
       gpa: 3.2,
       status: 'Active'
     });
@@ -156,46 +184,58 @@ export class StudentsComponent implements OnInit {
     };
 
     if (this.isEditMode && this.currentStudentId) {
-      this.studentService.updateStudent(this.currentStudentId, payload).subscribe({
-        next: (res) => {
-          this.isLoading = false;
-          this.isModalVisible = false;
-          this.loadStudents();
-          this.notification.success('Thành công', `Đã cập nhật sinh viên ${res.name}`);
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.message.error('Lỗi khi cập nhật sinh viên!');
-        }
-      });
+      this.studentService.updateStudent(this.currentStudentId, payload)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            this.isLoading = false;
+            this.isModalVisible = false;
+            this.reloadList();
+            this.notification.success('Thành công', `Đã cập nhật sinh viên ${res.name}`);
+          },
+          error: () => {
+            this.isLoading = false;
+            this.message.error('Lỗi khi cập nhật sinh viên!');
+          }
+        });
     } else {
-      this.studentService.addStudent(payload).subscribe({
-        next: (res) => {
-          this.isLoading = false;
-          this.isModalVisible = false;
-          this.loadStudents();
-          this.notification.success('Thành công', `Đã thêm sinh viên mới: ${res.name} (${res.id})`);
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.message.error('Lỗi khi thêm sinh viên mới!');
-        }
-      });
+      this.studentService.addStudent(payload)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            this.isLoading = false;
+            this.isModalVisible = false;
+            this.reloadList();
+            this.notification.success('Thành công', `Đã thêm sinh viên mới: ${res.name} (${res.id})`);
+          },
+          error: () => {
+            this.isLoading = false;
+            this.message.error('Lỗi khi thêm sinh viên mới!');
+          }
+        });
     }
   }
 
   deleteStudent(id: string): void {
     this.isLoading = true;
-    this.studentService.deleteStudent(id).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.loadStudents();
-        this.message.success(`Đã xóa sinh viên ID: ${id}`);
-      },
-      error: () => {
-        this.isLoading = false;
-        this.message.error('Không thể xóa sinh viên!');
-      }
-    });
+    this.studentService.deleteStudent(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.reloadList();
+          this.message.success(`Đã xóa sinh viên ID: ${id}`);
+        },
+        error: () => {
+          this.isLoading = false;
+          this.message.error('Không thể xóa sinh viên!');
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    // Unsubscribe all active subscriptions safely
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

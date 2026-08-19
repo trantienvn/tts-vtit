@@ -1,97 +1,416 @@
 <div class="rxjs-wrapper">
   <!-- Page Header -->
   <div class="page-header">
-    <h1 class="page-title">RxJS Reactive Streams Playground</h1>
-    <p class="page-subtitle">Demonstrating Observable, Observer, Subscription, BehaviorSubject, and debounceTime</p>
+    <h1 class="page-title">RxJS Operators Interactive Playground</h1>
+    <p class="page-subtitle">Học và thử nghiệm thực tế 10 RxJS Operators & Quản lý Subscription trong Angular</p>
   </div>
 
-  <div class="demo-grid">
-    <!-- Stream Controllers Panel -->
-    <div class="left-column">
-      <!-- Counter Stream Card -->
-      <div class="card-panel demo-card">
-        <div class="card-header">
-          <span nz-icon nzType="number" class="card-icon primary"></span>
-          <h3>BehaviorSubject Counter Stream</h3>
-        </div>
+  <div class="demo-layout-grid">
+    <!-- Main Tabs Panel (Left) -->
+    <div class="left-main-panel">
+      <nz-card [nzBordered]="false" class="main-card">
+        <nz-tabs [(nzSelectedIndex)]="selectedTabIndex" nzType="card" [nzAnimated]="true">
+          <!-- ============================================================ -->
+          <!-- TAB 1: Basic Operators (map, filter, take) -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="1. Basic Operators">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Lý thuyết:</strong></p>
+                <ul>
+                  <li><code>filter(predicate)</code>: Chỉ cho phép các phần tử thỏa mãn điều kiện đi qua stream.</li>
+                  <li><code>take(count)</code>: Lấy đúng N phần tử đầu tiên rồi tự động <code>complete()</code> stream.
+                  </li>
+                  <li><code>map(project)</code>: Biến đổi (transform) từng phần tử dữ liệu phát ra từ stream.</li>
+                </ul>
+              </div>
 
-        <div class="counter-display">
-          <span class="counter-value">{{ counter$ | async }}</span>
-        </div>
+              <div class="controls-bar"
+                style="display: flex; gap: 24px; align-items: center; background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                <div style="flex: 1;">
+                  <label style="font-weight: 600;">Lọc GPA tối thiểu (filter >= {{ minGpaThreshold }}):</label>
+                  <nz-slider [nzMin]="2.0" [nzMax]="4.0" [nzStep]="0.1" [(ngModel)]="minGpaThreshold"
+                    (ngModelChange)="runBasicOperatorPipeline()"></nz-slider>
+                </div>
+                <div style="flex: 1;">
+                  <label style="font-weight: 600;">Số lượng lấy (take {{ takeLimit }}):</label>
+                  <nz-slider [nzMin]="1" [nzMax]="5" [(ngModel)]="takeLimit"
+                    (ngModelChange)="runBasicOperatorPipeline()"></nz-slider>
+                </div>
+                <button nz-button nzType="primary" (click)="runBasicOperatorPipeline()">
+                  <span nz-icon nzType="reload"></span> Chạy Pipeline
+                </button>
+              </div>
 
-        <div class="button-group">
-          <button nz-button nzType="primary" (click)="increment()">
-            <span nz-icon nzType="plus"></span> Increment
-          </button>
-          <button nz-button (click)="decrement()">
-            <span nz-icon nzType="minus"></span> Decrement
-          </button>
-          <button nz-button (click)="resetCounter()">
-            <span nz-icon nzType="reload"></span> Reset
-          </button>
-          <button
-            nz-button
-            [nzDanger]="isTimerRunning"
-            (click)="toggleAutoTimer()"
-          >
-            <span nz-icon [nzType]="isTimerRunning ? 'pause' : 'caret-right'"></span>
-            {{ isTimerRunning ? 'Stop Interval' : 'Start Interval (1s)' }}
-          </button>
-        </div>
-      </div>
+              <div class="pipeline-visualization" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <!-- Logs / Step-by-step -->
+                <div class="visual-card"
+                  style="background: #1e1e1e; color: #4ec9b0; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px; max-height: 280px; overflow-y: auto;">
+                  <div style="color: #888; font-weight: bold; margin-bottom: 8px;">LOG STREAM THỰC THI THỜI GIAN THỰC:
+                  </div>
+                  <div *ngFor="let line of basicOperatorLogs" style="margin-bottom: 4px;">{{ line }}</div>
+                </div>
 
-      <!-- Search Debounce Stream Card -->
-      <div class="card-panel demo-card">
-        <div class="card-header">
-          <span nz-icon nzType="search" class="card-icon purple"></span>
-          <h3>Subject + debounceTime(400ms) Stream</h3>
-        </div>
+                <!-- Final Table Output -->
+                <div class="visual-card">
+                  <h4 style="font-weight: 600; margin-bottom: 8px;">Dữ liệu sau khi qua Operator (map):</h4>
+                  <nz-table #basicTable [nzData]="basicOperatorResult" [nzFrontPagination]="false" nzSize="small">
+                    <thead>
+                      <tr>
+                        <th>Mã SV</th>
+                        <th>Họ Tên (Mapped)</th>
+                        <th>GPA Formatted</th>
+                        <th>Danh Hiệu</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of basicTable.data">
+                        <td><strong>{{ item.id }}</strong></td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.gpaFormatted }}</td>
+                        <td><nz-tag nzColor="blue">{{ item.honorBadge }}</nz-tag></td>
+                      </tr>
+                    </tbody>
+                  </nz-table>
+                </div>
+              </div>
+            </div>
+          </nz-tab>
 
-        <div class="input-section">
-          <nz-input-group nzPrefixIcon="thunderbolt">
-            <input
-              type="text"
-              nz-input
-              placeholder="Nhập chữ nhanh để thấy hiệu ứng debounceTime..."
-              [(ngModel)]="searchValue"
-              (ngModelChange)="onSearchInput($event)"
-            />
-          </nz-input-group>
-        </div>
+          <!-- ============================================================ -->
+          <!-- TAB 2: Search Demo (valueChanges + debounceTime + distinctUntilChanged + filter) -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="2. Search & Filter">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Lý thuyết Quy Trình Tìm Kiếm Chuẩn RxJS:</strong></p>
+                <ul>
+                  <li><code>FormControl.valueChanges</code>: Stream phát sự kiện mỗi khi người dùng gõ phím.</li>
+                  <li><code>debounceTime(400ms)</code>: Chờ người dùng ngừng gõ 400ms mới phát sự kiện (tránh Spam API).
+                  </li>
+                  <li><code>distinctUntilChanged()</code>: Chỉ phát tiếp nếu giá trị tìm kiếm KHÁC giá trị vừa tìm trước
+                    đó.</li>
+                  <li><code>filter(term)</code>: Chỉ duyệt query hợp lệ (độ dài = 0 hoặc >= 2 ký tự).</li>
+                </ul>
+              </div>
 
-        <div class="stream-result-box">
-          <span class="result-label">Giá trị Debounced vừa phát ra:</span>
-          <span class="result-value">{{ debouncedSearchValue || '(đang chờ dữ liệu nhập...)' }}</span>
-        </div>
-      </div>
+              <div class="search-input-section" style="margin: 16px 0;">
+                <nz-input-group nzPrefixIcon="search" nzSize="large">
+                  <input type="text" nz-input [formControl]="demo2SearchControl"
+                    placeholder="Nhập tên sinh viên (ví dụ: 'Anh', 'Bình', 'Hùng')..." />
+                </nz-input-group>
+              </div>
+
+              <!-- Stream Process Visualization -->
+              <div class="stream-steps"
+                style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div class="step-card"
+                  style="background: #f5f5f5; padding: 12px; border-radius: 8px; border-top: 3px solid #1890ff;">
+                  <span class="step-title" style="font-weight: 600; color: #1890ff;">1. Raw Input Log</span>
+                  <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                    <div *ngFor="let log of demo2RawInputLog">{{ log }}</div>
+                  </div>
+                </div>
+
+                <div class="step-card"
+                  style="background: #f5f5f5; padding: 12px; border-radius: 8px; border-top: 3px solid #722ed1;">
+                  <span class="step-title" style="font-weight: 600; color: #722ed1;">2. debounceTime(400ms)</span>
+                  <div style="font-size: 14px; font-weight: bold; color: #333; margin-top: 8px;">
+                    {{ demo2DebouncedValue || '(Đang chờ...)' }}
+                  </div>
+                </div>
+
+                <div class="step-card"
+                  style="background: #f5f5f5; padding: 12px; border-radius: 8px; border-top: 3px solid #fa8c16;">
+                  <span class="step-title" style="font-weight: 600; color: #fa8c16;">3. distinctUntilChanged()</span>
+                  <div style="font-size: 14px; font-weight: bold; color: #333; margin-top: 8px;">
+                    {{ demo2DistinctValue || '(Chờ thay đổi)' }}
+                  </div>
+                </div>
+
+                <div class="step-card"
+                  style="background: #f5f5f5; padding: 12px; border-radius: 8px; border-top: 3px solid #52c41a;">
+                  <span class="step-title" style="font-weight: 600; color: #52c41a;">4. filter(length >= 2)</span>
+                  <div style="font-size: 14px; font-weight: bold; color: #52c41a; margin-top: 8px;">
+                    {{ demo2FilteredValue || '(Đã thông qua)' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Result Table -->
+              <nz-spin [nzSpinning]="demo2IsLoading">
+                <nz-table #searchTable [nzData]="demo2SearchResults" [nzPageSize]="4" nzSize="small">
+                  <thead>
+                    <tr>
+                      <th>Mã SV</th>
+                      <th>Họ Tên</th>
+                      <th>Email</th>
+                      <th>Lớp</th>
+                      <th>GPA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let s of searchTable.data">
+                      <td><strong>{{ s.id }}</strong></td>
+                      <td>{{ s.name }}</td>
+                      <td>{{ s.email }}</td>
+                      <td><nz-tag>{{ s.className }}</nz-tag></td>
+                      <td>{{ s.gpa }}</td>
+                    </tr>
+                  </tbody>
+                </nz-table>
+              </nz-spin>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 3: switchMap Demo (Request Cancellation) -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="3. switchMap Demo">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Lý thuyết switchMap:</strong></p>
+                <p>Chỉ quan tâm tới Observable MỚI NHẤT. Ngay khi Observable mới xuất hiện, <code>switchMap</code> sẽ
+                  <strong>TỰ ĐỘNG HỦY (Cancel/Unsubscribe)</strong> Observable trước đó chưa hoàn thành. <em>Phù hợp
+                    tuyệt đối cho chức năng Tìm kiếm (Search).</em></p>
+              </div>
+
+              <div style="margin: 16px 0; display: flex; align-items: center; gap: 16px;">
+                <button nz-button nzType="primary" nzDanger (click)="triggerRapidSwitchMapRequests()">
+                  <span nz-icon nzType="thunderbolt"></span> Bắn 3 Search Requests Liên Tục (Rapid Requests)
+                </button>
+
+                <div style="font-weight: 600; color: #1890ff;">
+                  Trạng thái Stream: <span>{{ switchMapStatus }}</span>
+                </div>
+              </div>
+
+              <nz-alert nzType="info"
+                nzMessage="Khi bấm nút trên, 3 requests ('Nguyễ', 'Trần', 'Lê') sẽ được gửi liên tiếp. Bạn sẽ thấy Request #1 và #2 lập tức BỊ HỦY, chỉ có Request #3 được hoàn tất!"
+                nzShowIcon style="margin-bottom: 16px;"></nz-alert>
+
+              <nz-table #switchTable [nzData]="switchMapResults" [nzFrontPagination]="false" nzSize="small">
+                <thead>
+                  <tr>
+                    <th>Mã SV</th>
+                    <th>Họ Tên</th>
+                    <th>Email</th>
+                    <th>Lớp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let s of switchTable.data">
+                    <td><strong>{{ s.id }}</strong></td>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.email }}</td>
+                    <td><nz-tag>{{ s.className }}</nz-tag></td>
+                  </tr>
+                </tbody>
+              </nz-table>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 4: concatMap Demo (Sequential Tasks Execution) -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="4. concatMap Demo">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Lý thuyết concatMap:</strong></p>
+                <p>Thực hiện các Observable theo <strong>THỨ TỰ TUẦN TỰ (Sequential Queue)</strong>. Observable sau PHẢI
+                  CHỜ Observable trước hoàn thành xong hoàn toàn mới bắt đầu chạy. <em>Phù hợp cho các thao tác phụ
+                    thuộc thứ tự như Batch Save/Cập nhật dữ liệu hàng loạt.</em></p>
+              </div>
+
+              <div style="margin: 16px 0; display: flex; align-items: center; gap: 16px;">
+                <button nz-button nzType="primary" [nzLoading]="concatMapIsRunning"
+                  (click)="triggerConcatMapSequence()">
+                  <span nz-icon nzType="ordered-list"></span> Thực Hiện Batch Update 3 SV Tuần Tự (concatMap)
+                </button>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <nz-progress [nzPercent]="concatMapProgress" nzStatus="active"></nz-progress>
+              </div>
+
+              <div class="console-box"
+                style="background: #252526; color: #cccccc; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px; min-height: 180px;">
+                <div style="color: #e5c07b; font-weight: bold; margin-bottom: 8px;">NHẬT KÝ THỰC THI TUẦN TỰ (CONCATMAP
+                  QUEUE):</div>
+                <div *ngIf="concatMapLogs.length === 0" style="color: #666;">Bấm nút trên để bắt đầu tiến trình
+                  concatMap...</div>
+                <div *ngFor="let log of concatMapLogs" style="margin-bottom: 4px;">{{ log }}</div>
+              </div>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 5: mergeMap Demo (Concurrent Multi-Fetch) -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="5. mergeMap Demo">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Lý thuyết mergeMap:</strong></p>
+                <p>Cho phép <strong>NHIỀU OBSERVABLE CHẠY SONG SONG/ĐỒNG THỜI (Concurrent/Parallel)</strong>. Không hủy
+                  request cũ (như switchMap) và không bắt chờ theo thứ tự (như concatMap). Kết quả của request nào về
+                  trước sẽ phát ra trước. <em>Phù hợp tải độc lập nhiều tài nguyên cùng lúc.</em></p>
+              </div>
+
+              <div style="margin: 16px 0;">
+                <button nz-button nzType="primary" [nzLoading]="mergeMapIsRunning"
+                  (click)="triggerMergeMapConcurrent()">
+                  <span nz-icon nzType="cluster"></span> Tải Đồng Thời Chi Tiết 4 SV (mergeMap)
+                </button>
+              </div>
+
+              <nz-table #mergeTable [nzData]="mergeMapResults" [nzFrontPagination]="false" nzSize="small">
+                <thead>
+                  <tr>
+                    <th>Mã SV</th>
+                    <th>Họ Tên</th>
+                    <th>Độ Trễ Giả Lập (Latency)</th>
+                    <th>Thời Gian Hoàn Thành</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of mergeTable.data">
+                    <td><strong>{{ item.id }}</strong></td>
+                    <td>{{ item.name }}</td>
+                    <td><nz-tag nzColor="orange">{{ item.latency }} ms</nz-tag></td>
+                    <td><nz-tag nzColor="green">{{ item.completedAt }}</nz-tag></td>
+                  </tr>
+                </tbody>
+              </nz-table>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 6: debounceTime vs throttleTime -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="6. debounce vs throttle">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Phân biệt debounceTime và throttleTime:</strong></p>
+                <ul>
+                  <li><code>debounceTime(N ms)</code>: <strong>Dừng thao tác N ms mới phát tín hiệu</strong>. Nếu tiếp
+                    tục kích hoạt trong N ms, timer sẽ bị reset. <em>(Ví dụ: Gõ ô tìm kiếm).</em></li>
+                  <li><code>throttleTime(N ms)</code>: <strong>Phát tín hiệu NGAY LẬP TỨC khi nhận sự kiện đầu
+                      tiên</strong>, sau đó KHÓA/BỎ QUA mọi sự kiện tiếp theo trong N ms. <em>(Ví dụ: Chống Spam click
+                      nút Submit, Scroll event).</em></li>
+                </ul>
+              </div>
+
+              <div style="margin: 20px 0; text-align: center; background: #fafafa; padding: 24px; border-radius: 8px;">
+                <button nz-button nzType="primary" nzSize="large" (click)="onUserClickSpam()"
+                  style="margin-right: 12px;">
+                  <span nz-icon nzType="vertical-align-center"></span> CLICK SPAM VÀO NÚT NÀY THẬT NHANH!
+                </button>
+                <button nz-button (click)="resetClickCounters()">Reset Bộ Đếm</button>
+
+                <div style="font-size: 18px; font-weight: bold; color: #1890ff; margin-top: 12px;">
+                  Tổng số lần bạn click thực tế (Raw Clicks): <span style="font-size: 26px; color: #ff4d4f;">{{
+                    rawClickCount }}</span>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <!-- debounceTime Card -->
+                <nz-card nzTitle="debounceTime(600ms)" [nzExtra]="debExtra">
+                  <ng-template #debExtra><nz-tag nzColor="orange">Dừng mới phát</nz-tag></ng-template>
+                  <div style="font-size: 32px; font-weight: bold; text-align: center; color: #fa8c16;">
+                    {{ debouncedClickCount }}
+                  </div>
+                  <p style="text-align: center; color: #888; font-size: 12px; margin-top: 8px;">
+                    Lần phát tín hiệu gần nhất: <strong>{{ lastDebouncedTime }}</strong>
+                  </p>
+                </nz-card>
+
+                <!-- throttleTime Card -->
+                <nz-card nzTitle="throttleTime(600ms)" [nzExtra]="throExtra">
+                  <ng-template #throExtra><nz-tag nzColor="green">Phát ngay & Khóa</nz-tag></ng-template>
+                  <div style="font-size: 32px; font-weight: bold; text-align: center; color: #52c41a;">
+                    {{ throttledClickCount }}
+                  </div>
+                  <p style="text-align: center; color: #888; font-size: 12px; margin-top: 8px;">
+                    Lần phát tín hiệu gần nhất: <strong>{{ lastThrottledTime }}</strong>
+                  </p>
+                </nz-card>
+              </div>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 7: Subscription & takeUntil -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="7. Subscription & takeUntil">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Quản lý Subscription & Tránh Memory Leak:</strong></p>
+                <ul>
+                  <li><strong>Vấn đề:</strong> Nếu subscribe thủ công mà không unsubscribe khi Component bị Destroy,
+                    Observable vẫn âm thầm chạy ngầm trong bộ nhớ (Memory Leak).</li>
+                  <li><strong>Giải pháp 1:</strong> Sử dụng <code>takeUntil(this.destroy$)</code> kết hợp với Subject
+                    phát ra tín hiệu ở <code>ngOnDestroy()</code>.</li>
+                  <li><strong>Giải pháp 2 (Khuyên dùng):</strong> Sử dụng <code>AsyncPipe</code>
+                    (<code>counter$ | async</code>) trong Template HTML. Angular sẽ tự động subscribe và unsubscribe khi
+                    Component destroy!</li>
+                </ul>
+              </div>
+
+              <div style="margin: 16px 0; background: #fafafa; padding: 16px; border-radius: 8px;">
+                <label style="font-weight: 600; margin-right: 12px;">Chọn Chiến Lược Quản Lý Subscription:</label>
+                <nz-radio-group [(ngModel)]="cleanupStrategy">
+                  <label nz-radio nzValue="takeUntil">1. takeUntil(destroy$) [An Toàn]</label>
+                  <label nz-radio nzValue="asyncPipe">2. Async Pipe [Tự Động]</label>
+                  <label nz-radio nzValue="leak">3. Unhandled Subscribe [Nguy Hiểm - Rò Rỉ Bộ Nhớ]</label>
+                </nz-radio-group>
+
+                <div style="margin-top: 16px;">
+                  <button nz-button [nzType]="isChildMounted ? 'default' : 'primary'" (click)="toggleChildComponent()">
+                    <span nz-icon [nzType]="isChildMounted ? 'stop' : 'play-circle'"></span>
+                    {{ isChildMounted ? 'Gỡ/Unmount Component Con' : 'Mount Component Con' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Child Component Container -->
+              <ng-container *ngIf="isChildMounted">
+                <app-sub-cleanup-demo [strategy]="cleanupStrategy" [onLog]="logFromChild"></app-sub-cleanup-demo>
+              </ng-container>
+            </div>
+          </nz-tab>
+        </nz-tabs>
+      </nz-card>
     </div>
 
-    <!-- Live Stream Console Log -->
-    <div class="card-panel log-console-panel">
-      <div class="console-header">
-        <div class="console-title">
-          <span nz-icon nzType="code" class="console-icon"></span>
-          <h3>Reactive Stream Event Log (Observer Output)</h3>
-        </div>
-        <button nz-button nzSize="small" (click)="clearLogs()">Clear Log</button>
-      </div>
-
-      <div class="console-body">
-        <div *ngIf="logs.length === 0" class="empty-log">
-          Chưa có sự kiện stream nào phát ra. Hãy tương tác với các nút ở bên trái.
+    <!-- Live Stream Console Log (Right Panel) -->
+    <div class="right-log-panel">
+      <div class="card-panel log-console-panel">
+        <div class="console-header">
+          <div class="console-title">
+            <span nz-icon nzType="code" class="console-icon"></span>
+            <h3>Stream Event Console Log</h3>
+          </div>
+          <button nz-button nzSize="small" (click)="clearLogs()">Clear Log</button>
         </div>
 
-        <div class="log-item animate-fade-in" *ngFor="let log of logs">
-          <span class="log-time">[{{ log.timestamp }}]</span>
-          <span class="badge" [ngClass]="{
-            'badge-primary': log.type === 'info',
-            'badge-success': log.type === 'success',
-            'badge-warning': log.type === 'warning',
-            'badge-error': log.type === 'error'
-          }">
-            {{ log.source }}
-          </span>
-          <span class="log-value">➔ {{ log.value }}</span>
+        <div class="console-body">
+          <div *ngIf="logs.length === 0" class="empty-log">
+            Chưa có sự kiện stream nào phát ra. Hãy tương tác với các nút ở bên trái.
+          </div>
+
+          <div class="log-item animate-fade-in" *ngFor="let log of logs">
+            <span class="log-time">[{{ log.timestamp }}]</span>
+            <span class="badge" [ngClass]="{
+              'badge-primary': log.type === 'info',
+              'badge-success': log.type === 'success',
+              'badge-warning': log.type === 'warning',
+              'badge-error': log.type === 'error'
+            }">
+              {{ log.source }}
+            </span>
+            <span class="log-value">➔ {{ log.value }}</span>
+          </div>
         </div>
       </div>
     </div>
