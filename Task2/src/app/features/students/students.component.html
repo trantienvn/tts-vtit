@@ -3,7 +3,7 @@
   <div class="header-flex">
     <div class="page-header">
       <h1 class="page-title">Quản Lý Sinh Viên (Student Directory)</h1>
-      <p class="page-subtitle">Quản lý hồ sơ, lớp học, điểm GPA và trạng thái sinh viên</p>
+      <p class="page-subtitle">Quản lý hồ sơ, lớp học, điểm GPA và trạng thái sinh viên qua combineLatest</p>
     </div>
 
     <div class="action-buttons">
@@ -14,15 +14,37 @@
   </div>
 
   <!-- Search & Filter Toolbar -->
-  <div class="card-panel toolbar-panel">
-    <div class="search-box" style="display: flex; align-items: center; gap: 16px; width: 100%;">
-      <nz-input-group nzPrefixIcon="search" style="max-width: 450px;">
-        <input type="text" nz-input placeholder="Gõ để tìm kiếm (đã áp dụng debounceTime 350ms & switchMap)..." [formControl]="searchControl" />
-      </nz-input-group>
+  <div class="card-panel toolbar-panel" style="margin-bottom: 20px;">
+    <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; width: 100%;">
+      <!-- Search input -->
+      <div style="flex: 2; min-width: 250px;">
+        <nz-input-group nzPrefixIcon="search">
+          <input type="text" nz-input placeholder="Tìm theo Mã SV, Họ tên, Email... (độ dài >= 2 ký tự)" [formControl]="searchControl" />
+        </nz-input-group>
+      </div>
 
-      <div class="search-status-info" style="font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px;">
+      <!-- Class filter -->
+      <div style="width: 180px;">
+        <nz-select [formControl]="classFilterControl" style="width: 100%;" nzPlaceHolder="Chọn Lớp học">
+          <nz-option nzValue="ALL" nzLabel="Tất cả các lớp"></nz-option>
+          <nz-option *ngFor="let c of classes" [nzValue]="c.name" [nzLabel]="c.name"></nz-option>
+        </nz-select>
+      </div>
+
+      <!-- Status filter -->
+      <div style="width: 180px;">
+        <nz-select [formControl]="statusFilterControl" style="width: 100%;" nzPlaceHolder="Chọn Trạng thái">
+          <nz-option nzValue="ALL" nzLabel="Tất cả trạng thái"></nz-option>
+          <nz-option nzValue="Active" nzLabel="Active"></nz-option>
+          <nz-option nzValue="Graduated" nzLabel="Graduated"></nz-option>
+          <nz-option nzValue="Suspended" nzLabel="Suspended"></nz-option>
+        </nz-select>
+      </div>
+
+      <!-- Status Text -->
+      <div class="search-status-info" style="font-size: 13px; color: #666; display: flex; align-items: center; gap: 8px; margin-left: auto;">
         <nz-badge [nzStatus]="isLoading ? 'processing' : 'success'"></nz-badge>
-        <span>{{ searchStatusText }}</span>
+        <span style="font-weight: 500;">{{ searchStatusText }}</span>
       </div>
     </div>
   </div>
@@ -71,12 +93,12 @@
             </td>
             <td nzAlign="center">
               <div class="table-actions">
-                <button nz-button nzType="text" nzSize="small" (click)="openEditModal(student)">
+                <button nz-button nzType="text" nzSize="small" (click)="openEditModal(student)" nz-tooltip nzTooltipTitle="Sửa thông tin">
                   <span nz-icon nzType="edit" style="color: #1890ff;"></span>
                 </button>
                 <button nz-button nzType="text" nzSize="small" nz-popconfirm
-                  nzPopconfirmTitle="Bạn có chắc chắn muốn xóa sinh viên này?" nzOkText="Xóa" nzCancelText="Hủy"
-                  (nzOnConfirm)="deleteStudent(student.id)">
+                  nzPopconfirmTitle="Bạn có chắc chắn muốn xóa sinh viên này khỏi hệ thống?" nzOkText="Xóa" nzCancelText="Hủy"
+                  (nzOnConfirm)="deleteStudent(student.id)" nz-tooltip nzTooltipTitle="Xóa sinh viên">
                   <span nz-icon nzType="delete" style="color: #ff4d4f;"></span>
                 </button>
               </div>
@@ -127,12 +149,9 @@
         <!-- Lớp -->
         <nz-form-item>
           <nz-form-label nzRequired>Lớp Học</nz-form-label>
-          <nz-form-control>
-            <nz-select formControlName="className">
-              <nz-option nzValue="CNTT-K65" nzLabel="CNTT-K65"></nz-option>
-              <nz-option nzValue="KTPM-K65" nzLabel="KTPM-K65"></nz-option>
-              <nz-option nzValue="KTPM-K64" nzLabel="KTPM-K64"></nz-option>
-              <nz-option nzValue="HTTT-K66" nzLabel="HTTT-K66"></nz-option>
+          <nz-form-control nzErrorTip="Vui lòng chọn lớp học">
+            <nz-select formControlName="className" nzPlaceHolder="Chọn lớp học">
+              <nz-option *ngFor="let c of classes" [nzValue]="c.name" [nzLabel]="c.name"></nz-option>
             </nz-select>
           </nz-form-control>
         </nz-form-item>

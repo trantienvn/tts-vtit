@@ -1,0 +1,20 @@
+{
+  "students": [
+    { "id": "STD2026001", "name": "Nguyễn Văn Anh", "email": "vananh@ictu.edu.vn", "gender": "Nam", "className": "CNTT K22K", "birthDate": "2005-05-15", "gpa": 3.82, "status": "Active" },
+    { "id": "STD2026002", "name": "Trần Thị Bình", "email": "thibinh@ictu.edu.vn", "gender": "Nữ", "className": "CNTT K22A", "birthDate": "2004-08-20", "gpa": 3.65, "status": "Active" },
+    { "id": "STD2026003", "name": "Lê Hoàng Cường", "email": "hoangcuong@ictu.edu.vn", "gender": "Nam", "className": "KTPM K20B", "birthDate": "2003-11-10", "gpa": 3.90, "status": "Graduated" },
+    { "id": "STD2026004", "name": "Phạm Minh Đức", "email": "minhduc@ictu.edu.vn", "gender": "Nam", "className": "HTTT K22C", "birthDate": "2005-02-28", "gpa": 2.95, "status": "Active" },
+    { "id": "STD2026005", "name": "Vũ Thanh Em", "email": "thanhem@ictu.edu.vn", "gender": "Nữ", "className": "CNTT K22D", "birthDate": "2004-09-05", "gpa": 2.40, "status": "Suspended" },
+    { "id": "STD2026006", "name": "Đoàn Hải Phong", "email": "haiphong@ictu.edu.vn", "gender": "Nam", "className": "KTPM K22E", "birthDate": "2004-12-12", "gpa": 3.50, "status": "Active" },
+    { "id": "STD2026007", "name": "Hoàng Thị Giang", "email": "thigiang@ictu.edu.vn", "gender": "Nữ", "className": "CNTT K22A", "birthDate": "2005-01-14", "gpa": 3.75, "status": "Active" },
+    { "id": "STD2026008", "name": "Bùi Văn Hùng", "email": "vanhung@ictu.edu.vn", "gender": "Nam", "className": "HTTT K22C", "birthDate": "2004-04-18", "gpa": 3.10, "status": "Active" }
+  ],
+  "classes": [
+    { "id": "CLASS01", "name": "CNTT K22K" },
+    { "id": "CLASS02", "name": "CNTT K22A" },
+    { "id": "CLASS03", "name": "KTPM K20B" },
+    { "id": "CLASS04", "name": "HTTT K22C" },
+    { "id": "CLASS05", "name": "CNTT K22D" },
+    { "id": "CLASS06", "name": "KTPM K22E" }
+  ]
+}

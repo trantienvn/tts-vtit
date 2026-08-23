@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
-import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, filter, switchMap, takeUntil, tap, map, startWith } from 'rxjs/operators';
+import { Observable, Subject, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, switchMap, takeUntil, tap, map, startWith, retry, finalize, catchError } from 'rxjs/operators';
 
 // NG-ZORRO Modules
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -24,9 +24,10 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 
 import { StudentService } from '../../core/services/student.service';
-import { Student } from '../../core/models/student.model';
+import { Student, SchoolClass } from '../../core/models/student.model';
 
 @Component({
   selector: 'app-students',
@@ -51,7 +52,8 @@ import { Student } from '../../core/models/student.model';
     NzDatePickerModule,
     NzInputNumberModule,
     NzTooltipModule,
-    NzBadgeModule
+    NzBadgeModule,
+    NzAlertModule
   ],
   templateUrl: './students.component.html',
   styleUrl: './students.component.scss'
@@ -67,7 +69,11 @@ export class StudentsComponent implements OnInit, OnDestroy {
   private refresh$ = new BehaviorSubject<void>(undefined);
 
   searchControl = new FormControl('', { nonNullable: true });
+  classFilterControl = new FormControl('ALL', { nonNullable: true });
+  statusFilterControl = new FormControl('ALL', { nonNullable: true });
+
   students$!: Observable<Student[]>;
+  classes: SchoolClass[] = [];
   isLoading = false;
   searchStatusText = 'Sẵn sàng tìm kiếm...';
 
@@ -79,6 +85,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initForm();
+    this.loadClasses();
     this.setupReactiveSearch();
   }
 
@@ -87,39 +94,83 @@ export class StudentsComponent implements OnInit, OnDestroy {
       name: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
       gender: ['Nam', [Validators.required]],
-      className: ['CNTT-K65', [Validators.required]],
+      className: ['', [Validators.required]],
       birthDate: [null, [Validators.required]],
       gpa: [3.0, [Validators.required, Validators.min(0), Validators.max(4.0)]],
       status: ['Active', [Validators.required]]
     });
   }
 
-  // Week 2 Task 2 & 4: Reactive Search with valueChanges + debounceTime + distinctUntilChanged + filter + switchMap
+  loadClasses(): void {
+    this.studentService.getClasses()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.classes = res;
+          // Set default className in form once classes load
+          if (this.classes.length > 0 && !this.studentForm.get('className')?.value) {
+            this.studentForm.patchValue({ className: this.classes[0].name });
+          }
+        },
+        error: (err) => {
+          console.error('Lỗi khi tải danh sách lớp học:', err);
+          this.message.error('Không thể tải danh sách lớp học!');
+        }
+      });
+  }
+
+  // Week 3 Task 3: combineLatest filter combining:
+  // - Search text changes with debounceTime and distinctUntilChanged
+  // - Class filter changes
+  // - Status filter changes
+  // Uses switchMap, retry(2), catchError, and finalize loading management
   setupReactiveSearch(): void {
+    const search$ = this.searchControl.valueChanges.pipe(
+      startWith(this.searchControl.value),
+      debounceTime(350),
+      distinctUntilChanged(),
+      filter(term => {
+        const trimmed = term.trim();
+        const isValid = trimmed.length === 0 || trimmed.length >= 2;
+        if (!isValid) {
+          this.searchStatusText = 'Nhập ít nhất 2 ký tự để tìm kiếm...';
+        }
+        return isValid;
+      })
+    );
+
+    const class$ = this.classFilterControl.valueChanges.pipe(
+      startWith(this.classFilterControl.value),
+      distinctUntilChanged()
+    );
+
+    const status$ = this.statusFilterControl.valueChanges.pipe(
+      startWith(this.statusFilterControl.value),
+      distinctUntilChanged()
+    );
+
     this.students$ = this.refresh$.pipe(
       takeUntil(this.destroy$),
       switchMap(() =>
-        this.searchControl.valueChanges.pipe(
-          startWith(this.searchControl.value),
-          debounceTime(350),
-          distinctUntilChanged(),
-          filter(term => {
-            // Valid filter: string length must be 0 (reset/show all) or >= 2 chars
-            const trimmed = term.trim();
-            const isValid = trimmed.length === 0 || trimmed.length >= 2;
-            if (!isValid) {
-              this.searchStatusText = 'Nhập ít nhất 2 ký tự để tìm kiếm...';
-            }
-            return isValid;
-          }),
-          tap(term => {
+        combineLatest([search$, class$, status$]).pipe(
+          tap(([q, cls, stat]) => {
             this.isLoading = true;
-            this.searchStatusText = term ? `Đang tìm kiếm "${term}"...` : 'Hiển thị tất cả sinh viên';
+            this.searchStatusText = 'Đang tìm kiếm & lọc kết quả...';
           }),
-          switchMap(term => this.studentService.searchStudents(term)),
-          tap(() => {
-            this.isLoading = false;
-          })
+          switchMap(([q, cls, stat]) =>
+            this.studentService.getStudentsFiltered(q, cls, stat).pipe(
+              retry(2), // retry twice in case of connection drop
+              catchError(error => {
+                console.error('Error fetching filtered students:', error);
+                this.message.error('Lỗi hệ thống khi tải danh sách sinh viên!');
+                return of<Student[]>([]); // recover with empty list
+              }),
+              finalize(() => {
+                this.isLoading = false;
+                this.searchStatusText = 'Hoàn thành tải dữ liệu';
+              })
+            )
+          )
         )
       )
     );
@@ -134,7 +185,7 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.currentStudentId = null;
     this.studentForm.reset({
       gender: 'Nam',
-      className: 'CNTT K22A',
+      className: this.classes.length > 0 ? this.classes[0].name : '',
       gpa: 3.2,
       status: 'Active'
     });
@@ -185,31 +236,39 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
     if (this.isEditMode && this.currentStudentId) {
       this.studentService.updateStudent(this.currentStudentId, payload)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.isLoading = false;
+          })
+        )
         .subscribe({
           next: (res) => {
-            this.isLoading = false;
             this.isModalVisible = false;
             this.reloadList();
             this.notification.success('Thành công', `Đã cập nhật sinh viên ${res.name}`);
           },
-          error: () => {
-            this.isLoading = false;
+          error: (err) => {
+            console.error('Update error:', err);
             this.message.error('Lỗi khi cập nhật sinh viên!');
           }
         });
     } else {
       this.studentService.addStudent(payload)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.isLoading = false;
+          })
+        )
         .subscribe({
           next: (res) => {
-            this.isLoading = false;
             this.isModalVisible = false;
             this.reloadList();
             this.notification.success('Thành công', `Đã thêm sinh viên mới: ${res.name} (${res.id})`);
           },
-          error: () => {
-            this.isLoading = false;
+          error: (err) => {
+            console.error('Insert error:', err);
             this.message.error('Lỗi khi thêm sinh viên mới!');
           }
         });
@@ -219,16 +278,20 @@ export class StudentsComponent implements OnInit, OnDestroy {
   deleteStudent(id: string): void {
     this.isLoading = true;
     this.studentService.deleteStudent(id)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
       .subscribe({
         next: () => {
-          this.isLoading = false;
           this.reloadList();
-          this.message.success(`Đã xóa sinh viên ID: ${id}`);
+          this.message.success(`Đã xóa thành công sinh viên ID: ${id}`);
         },
-        error: () => {
-          this.isLoading = false;
-          this.message.error('Không thể xóa sinh viên!');
+        error: (err) => {
+          console.error('Delete error:', err);
+          this.message.error('Không thể xóa sinh viên này!');
         }
       });
   }

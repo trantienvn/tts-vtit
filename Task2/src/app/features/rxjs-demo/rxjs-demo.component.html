@@ -379,6 +379,192 @@
               </ng-container>
             </div>
           </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 8: forkJoin vs combineLatest -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="8. forkJoin vs combineLatest">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>So sánh forkJoin và combineLatest:</strong></p>
+                <ul>
+                  <li><code>forkJoin</code>: Đợi tất cả các Observable hoàn thành (complete) rồi mới phát ra kết quả cuối cùng dưới dạng gộp (object/array). Chỉ phát duy nhất 1 lần. <em>Nếu một Observable bị lỗi, toàn bộ forkJoin sẽ thất bại trừ khi có catchError xử lý riêng.</em></li>
+                  <li><code>combineLatest</code>: Phát ra giá trị gộp ngay khi tất cả Observable nguồn phát ra ít nhất 1 lần, và tự động phát tiếp bất cứ khi nào có nguồn nào thay đổi. Không cần đợi complete.</li>
+                </ul>
+              </div>
+
+              <div class="controls-bar" style="background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; display: flex; gap: 16px; align-items: center;">
+                <label nz-checkbox [(ngModel)]="simulateApiError" style="font-weight: 500;">
+                  Giả lập Lỗi API ở Call B (Dùng cho forkJoin)
+                </label>
+                <button nz-button nzType="primary" [nzLoading]="forkJoinIsRunning" (click)="triggerForkJoin()">
+                  Chạy forkJoin
+                </button>
+                <button nz-button nzType="default" [nzLoading]="combineLatestIsRunning" (click)="triggerCombineLatest()">
+                  Chạy combineLatest
+                </button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <!-- forkJoin output -->
+                <nz-card nzTitle="Kết quả thực thi forkJoin" nzSize="small">
+                  <div style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; min-height: 180px; max-height: 250px; overflow-y: auto;">
+                    <div *ngIf="forkJoinLogs.length === 0" style="color: #666;">Nhấp nút "Chạy forkJoin" để bắt đầu...</div>
+                    <div *ngFor="let log of forkJoinLogs" style="margin-bottom: 4px;">{{ log }}</div>
+                  </div>
+                </nz-card>
+
+                <!-- combineLatest output -->
+                <nz-card nzTitle="Kết quả thực thi combineLatest" nzSize="small">
+                  <div style="background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 13px; min-height: 180px; max-height: 250px; overflow-y: auto;">
+                    <div *ngIf="combineLatestLogs.length === 0" style="color: #666;">Nhấp nút "Chạy combineLatest" để bắt đầu...</div>
+                    <div *ngFor="let log of combineLatestLogs" style="margin-bottom: 4px;">{{ log }}</div>
+                  </div>
+                </nz-card>
+              </div>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 9: Error Handling (retry, catchError, finalize) -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="9. Error Handling">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Xử lý lỗi RxJS trong HttpClient:</strong></p>
+                <ul>
+                  <li><code>retry(N)</code>: Tự động đăng ký lại (resubscribe) vào nguồn lỗi tối đa N lần để vượt qua các sự cố mạng tạm thời.</li>
+                  <li><code>catchError</code>: Bắt lỗi của stream, cho phép phục hồi (ví dụ trả về <code>of([])</code>) để subscriber tiếp tục nhận được dữ liệu và stream không bị crash.</li>
+                  <li><code>finalize</code>: Chạy khi stream kết thúc (Dù lỗi hay thành công). Thích hợp nhất để tắt trạng thái tải (Loading = false).</li>
+                </ul>
+              </div>
+
+              <div class="controls-bar" style="background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
+                <div>
+                  <label style="font-weight: 600; margin-right: 8px;">Loại lỗi API:</label>
+                  <nz-radio-group [(ngModel)]="errorTypeSelected">
+                    <label nz-radio nzValue="500">Lỗi Server (500)</label>
+                    <label nz-radio nzValue="timeout">Mất kết nối (Timeout)</label>
+                    <label nz-radio nzValue="200">Thành Công (200 OK)</label>
+                  </nz-radio-group>
+                </div>
+
+                <div>
+                  <label style="font-weight: 600; margin-right: 8px;">Số lần retry:</label>
+                  <nz-select [(ngModel)]="retryCountSelected" style="width: 100px;">
+                    <nz-option [nzValue]="0" nzLabel="0 lần"></nz-option>
+                    <nz-option [nzValue]="1" nzLabel="1 lần"></nz-option>
+                    <nz-option [nzValue]="2" nzLabel="2 lần"></nz-option>
+                    <nz-option [nzValue]="3" nzLabel="3 lần"></nz-option>
+                  </nz-select>
+                </div>
+
+                <button nz-button nzType="primary" nzDanger [nzLoading]="errorDemoIsLoading" (click)="runErrorDemo()">
+                  Gửi Request HTTP
+                </button>
+              </div>
+
+              <nz-spin [nzSpinning]="errorDemoIsLoading" nzTip="Đang kết nối API...">
+                <div style="background: #1e1e1e; color: #a9b7c6; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 13px; min-height: 200px; max-height: 300px; overflow-y: auto;">
+                  <div style="color: #cc7832; font-weight: bold; margin-bottom: 8px; border-bottom: 1px dashed #666; padding-bottom: 4px;">NHẬT KÝ MẠNG & THAO TÁC STREAM:</div>
+                  <div *ngIf="errorDemoLogs.length === 0" style="color: #666;">Chọn cấu hình và nhấp nút "Gửi Request HTTP"...</div>
+                  <div *ngFor="let log of errorDemoLogs" style="margin-bottom: 6px; line-height: 1.4;">{{ log }}</div>
+                </div>
+              </nz-spin>
+            </div>
+          </nz-tab>
+
+          <!-- ============================================================ -->
+          <!-- TAB 10: Flow Demo Tổng hợp -->
+          <!-- ============================================================ -->
+          <nz-tab nzTitle="10. Real-World Search Flow">
+            <div class="tab-content">
+              <div class="theory-box">
+                <p><strong>Luồng kết hợp liên hoàn nhiều Operators (Real-world Flow):</strong></p>
+                <p style="font-size: 13px; font-family: monospace; background: #fff; padding: 8px; border-radius: 4px; border: 1px solid #ddd; display: inline-block; margin-bottom: 0;">
+                  FormControl (Từ khóa) ➔ valueChanges ➔ debounceTime(400ms) ➔ distinctUntilChanged ➔ filter(>=2 chars) ➔ combineLatest([Lớp, Trạng thái]) ➔ switchMap(API) ➔ retry(2) ➔ catchError ➔ finalize
+                </p>
+              </div>
+
+              <div class="controls-bar" style="background: #fafafa; padding: 16px; border-radius: 8px; margin: 16px 0; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+                <div style="flex: 2; min-width: 200px;">
+                  <label style="font-weight: 600; display: block; margin-bottom: 4px;">Tìm kiếm từ khóa:</label>
+                  <nz-input-group nzPrefixIcon="search">
+                    <input type="text" nz-input [formControl]="flowSearchControl" placeholder="Nhập tên sinh viên cần tìm..." />
+                  </nz-input-group>
+                </div>
+
+                <div style="width: 150px;">
+                  <label style="font-weight: 600; display: block; margin-bottom: 4px;">Lớp học:</label>
+                  <nz-select [formControl]="flowClassControl" style="width: 100%;">
+                    <nz-option nzValue="ALL" nzLabel="Tất cả các lớp"></nz-option>
+                    <nz-option *ngFor="let c of flowClasses" [nzValue]="c.name" [nzLabel]="c.name"></nz-option>
+                  </nz-select>
+                </div>
+
+                <div style="width: 150px;">
+                  <label style="font-weight: 600; display: block; margin-bottom: 4px;">Trạng thái:</label>
+                  <nz-select [formControl]="flowStatusControl" style="width: 100%;">
+                    <nz-option nzValue="ALL" nzLabel="Tất cả trạng thái"></nz-option>
+                    <nz-option nzValue="Active" nzLabel="Active"></nz-option>
+                    <nz-option nzValue="Graduated" nzLabel="Graduated"></nz-option>
+                    <nz-option nzValue="Suspended" nzLabel="Suspended"></nz-option>
+                  </nz-select>
+                </div>
+
+                <div style="margin-top: 24px;">
+                  <label nz-checkbox [(ngModel)]="flowSimulateError" style="font-weight: 600; color: #ff4d4f;">
+                    Giả lập Lỗi API (500)
+                  </label>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; align-items: start;">
+                <!-- Logs visualizer -->
+                <nz-card nzTitle="Theo dõi luồng xử lý (Operator Pipeline Logs)" nzSize="small" [nzExtra]="clearFlowLogsTpl">
+                  <ng-template #clearFlowLogsTpl>
+                    <a (click)="clearFlowLogs()">Xóa log</a>
+                  </ng-template>
+                  <div style="background: #252526; color: #d4d4d4; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; min-height: 250px; max-height: 350px; overflow-y: auto;">
+                    <div *ngIf="flowLogs.length === 0" style="color: #666;">Chưa có log phát ra. Hãy thay đổi từ khóa tìm kiếm hoặc chọn bộ lọc...</div>
+                    <div *ngFor="let log of flowLogs" style="margin-bottom: 6px; line-height: 1.4; border-left: 2px solid #52c41a; padding-left: 6px;">{{ log }}</div>
+                  </div>
+                </nz-card>
+
+                <!-- Output Table -->
+                <nz-card nzTitle="Kết quả hiển thị trên UI (Bảng Sinh Viên)" nzSize="small">
+                  <nz-spin [nzSpinning]="flowIsLoading">
+                    <nz-table #flowTable [nzData]="flowResults" [nzPageSize]="4" nzSize="small">
+                      <thead>
+                        <tr>
+                          <th>Mã SV</th>
+                          <th>Họ Tên</th>
+                          <th>Lớp</th>
+                          <th>GPA</th>
+                          <th>Trạng Thái</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let s of flowTable.data">
+                          <td><strong>{{ s.id }}</strong></td>
+                          <td>{{ s.name }}</td>
+                          <td><nz-tag>{{ s.className }}</nz-tag></td>
+                          <td>{{ s.gpa }}</td>
+                          <td>
+                            <span class="badge" [ngClass]="{
+                              'badge-success': s.status === 'Active',
+                              'badge-purple': s.status === 'Graduated',
+                              'badge-error': s.status === 'Suspended'
+                            }">{{ s.status }}</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </nz-table>
+                  </nz-spin>
+                </nz-card>
+              </div>
+            </div>
+          </nz-tab>
         </nz-tabs>
       </nz-card>
     </div>

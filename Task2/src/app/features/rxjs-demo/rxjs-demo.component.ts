@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
-import { Subject, Observable, of, from } from 'rxjs';
+import { Subject, Observable, of, from, forkJoin, combineLatest, throwError, timer, interval } from 'rxjs';
 import {
   map,
   filter,
@@ -15,7 +15,11 @@ import {
   throttleTime,
   tap,
   toArray,
-  delay
+  delay,
+  retry,
+  catchError,
+  finalize,
+  startWith
 } from 'rxjs/operators';
 
 // NG-ZORRO Modules
@@ -32,9 +36,11 @@ import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 
 import { StudentService } from '../../core/services/student.service';
-import { Student } from '../../core/models/student.model';
+import { Student, SchoolClass } from '../../core/models/student.model';
 import { SubCleanupDemoComponent } from './sub-cleanup-demo.component';
 
 export interface LogItem {
@@ -64,6 +70,8 @@ export interface LogItem {
     NzSpinModule,
     NzAlertModule,
     NzProgressModule,
+    NzSelectModule,
+    NzCheckboxModule,
     SubCleanupDemoComponent
   ],
   templateUrl: './rxjs-demo.component.html',
@@ -135,6 +143,35 @@ export class RxjsDemoComponent implements OnInit, OnDestroy {
   isChildMounted = false;
   cleanupStrategy: 'leak' | 'takeUntil' | 'asyncPipe' = 'takeUntil';
 
+  // ==========================================
+  // DEMO 8: forkJoin vs combineLatest
+  // ==========================================
+  forkJoinLogs: string[] = [];
+  combineLatestLogs: string[] = [];
+  forkJoinIsRunning = false;
+  combineLatestIsRunning = false;
+  simulateApiError = false;
+
+  // ==========================================
+  // DEMO 9: Error Handling (retry, catchError, finalize)
+  // ==========================================
+  errorDemoLogs: string[] = [];
+  errorDemoIsLoading = false;
+  errorTypeSelected: '500' | 'timeout' | '200' = '500';
+  retryCountSelected = 2;
+
+  // ==========================================
+  // DEMO 10: Flow Demo Tổng hợp
+  // ==========================================
+  flowSearchControl = new FormControl('', { nonNullable: true });
+  flowClassControl = new FormControl('ALL', { nonNullable: true });
+  flowStatusControl = new FormControl('ALL', { nonNullable: true });
+  flowSimulateError = false;
+  flowIsLoading = false;
+  flowResults: Student[] = [];
+  flowLogs: string[] = [];
+  flowClasses: SchoolClass[] = [];
+
   ngOnInit(): void {
     this.studentService.getStudents().pipe(takeUntil(this.destroy$)).subscribe(list => {
       this.rawStudentsList = list;
@@ -145,6 +182,7 @@ export class RxjsDemoComponent implements OnInit, OnDestroy {
     this.setupDemo3SwitchMap();
     this.setupDemo4ConcatMap();
     this.setupDemo6ThrottleDebounce();
+    this.setupDemo10Flow();
   }
 
   // ------------------------------------------
@@ -398,6 +436,208 @@ export class RxjsDemoComponent implements OnInit, OnDestroy {
   logFromChild = (msg: string, type: LogItem['type']): void => {
     this.addLog('Child Component Stream', msg, type);
   };
+
+  // ==========================================
+  // DEMO 8: forkJoin vs combineLatest
+  // ==========================================
+  triggerForkJoin(): void {
+    this.forkJoinLogs = [];
+    this.forkJoinIsRunning = true;
+    this.addLog('forkJoin', 'Khởi chạy forkJoin (đợi tất cả hoàn thành)...', 'info');
+
+    const callA$ = of('Dữ liệu lớp CNTT (delay 600ms)').pipe(
+      delay(600),
+      tap(() => this.forkJoinLogs.push('⏱️ Call A hoàn thành sau 600ms'))
+    );
+    
+    const callB$ = this.simulateApiError 
+      ? throwError(() => new Error('Simulated HTTP 500 Error')).pipe(
+          delay(1000),
+          tap({ error: () => this.forkJoinLogs.push('❌ Call B gặp lỗi sau 1000ms') })
+        )
+      : of('Dữ liệu thống kê (delay 1200ms)').pipe(
+          delay(1200),
+          tap(() => this.forkJoinLogs.push('⏱️ Call B hoàn thành sau 1200ms'))
+        );
+
+    const callC$ = of('Dữ liệu cấu hình (delay 1800ms)').pipe(
+      delay(1800),
+      tap(() => this.forkJoinLogs.push('⏱️ Call C hoàn thành sau 1800ms'))
+    );
+
+    forkJoin({ a: callA$, b: callB$, c: callC$ }).pipe(
+      catchError(err => {
+        this.forkJoinLogs.push(`💥 forkJoin THẤT BẠI HOÀN TOÀN vì có 1 stream lỗi: ${err.message}`);
+        this.addLog('forkJoin', 'Thất bại do lỗi!', 'error');
+        return of(null);
+      }),
+      finalize(() => {
+        this.forkJoinIsRunning = false;
+      })
+    ).subscribe(res => {
+      if (res) {
+        this.forkJoinLogs.push(`✅ forkJoin thành công! Nhận kết quả gộp: ${JSON.stringify(res)}`);
+        this.addLog('forkJoin', 'Hoàn thành thành công', 'success');
+      }
+    });
+  }
+
+  triggerCombineLatest(): void {
+    this.combineLatestLogs = [];
+    this.combineLatestIsRunning = true;
+    this.addLog('combineLatest', 'Khởi chạy combineLatest...', 'info');
+
+    const streamA$ = interval(1000).pipe(
+      take(3),
+      map(v => `Lọc từ khóa #${v}`),
+      tap(v => this.combineLatestLogs.push(`🔄 Stream A phát: "${v}"`))
+    );
+
+    const streamB$ = interval(1500).pipe(
+      take(2),
+      map(v => `Lọc lớp #${v}`),
+      tap(v => this.combineLatestLogs.push(`🔄 Stream B phát: "${v}"`))
+    );
+
+    combineLatest([streamA$, streamB$]).pipe(
+      finalize(() => {
+        this.combineLatestIsRunning = false;
+        this.addLog('combineLatest', 'Stream kết thúc', 'info');
+      })
+    ).subscribe({
+      next: ([a, b]) => {
+        this.combineLatestLogs.push(`👉 Gộp mới nhất: [${a}, ${b}]`);
+        this.addLog('combineLatest', `Phát: [${a}, ${b}]`, 'success');
+      }
+    });
+  }
+
+  // ==========================================
+  // DEMO 9: Error Handling (retry, catchError, finalize)
+  // ==========================================
+  runErrorDemo(): void {
+    this.errorDemoLogs = [];
+    this.errorDemoIsLoading = true;
+    this.errorDemoLogs.push('🚀 Khởi tạo HTTP Request với mô phỏng lỗi...');
+    this.addLog('Error Demo', 'Khởi động HTTP Request', 'info');
+
+    const isTimeout = this.errorTypeSelected === 'timeout';
+    const errorCode = this.errorTypeSelected === '500' ? '500' : undefined;
+
+    let attemptCount = 0;
+
+    this.studentService.getStudentsWithErrorSimulation(errorCode, isTimeout).pipe(
+      tap(() => {
+        attemptCount++;
+        this.errorDemoLogs.push(`📥 Thử nghiệm lần ${attemptCount}: Gửi request thành công!`);
+      }),
+      retry(this.retryCountSelected),
+      catchError(err => {
+        this.errorDemoLogs.push(`❌ Lỗi bắt được ở catchError: ${err.message || 'Mất kết nối'}`);
+        this.errorDemoLogs.push('🩺 Trả về danh sách sinh viên rỗng để hồi phục stream!');
+        this.addLog('Error Demo', 'Bắt được lỗi & Hồi phục', 'warning');
+        return of([]); // recover with empty array
+      }),
+      finalize(() => {
+        this.errorDemoIsLoading = false;
+        this.errorDemoLogs.push('🏁 finalize() đã chạy: Đã tắt Loading Spinner thành công.');
+        this.addLog('Error Demo', 'Request finalize() kết thúc', 'info');
+      })
+    ).subscribe(list => {
+      this.errorDemoLogs.push(`🎉 Subscriber nhận được danh sách gồm ${list.length} sinh viên.`);
+      if (list.length > 0) {
+        this.addLog('Error Demo', 'Thành công!', 'success');
+      }
+    });
+  }
+
+  // ==========================================
+  // DEMO 10: Flow Demo Tổng hợp
+  // ==========================================
+  setupDemo10Flow(): void {
+    this.studentService.getClasses().subscribe(res => this.flowClasses = res);
+
+    const search$ = this.flowSearchControl.valueChanges.pipe(
+      startWith(this.flowSearchControl.value),
+      tap(val => this.addFlowLog(`[valueChanges] Thay đổi từ khóa: "${val}"`)),
+      debounceTime(400),
+      tap(val => this.addFlowLog(`[debounceTime] Đã dừng gõ 400ms: "${val}"`)),
+      distinctUntilChanged(),
+      tap(val => this.addFlowLog(`[distinctUntilChanged] Từ khóa thay đổi: "${val}"`)),
+      filter(term => {
+        const trimmed = term.trim();
+        const isValid = trimmed.length === 0 || trimmed.length >= 2;
+        if (!isValid) {
+          this.addFlowLog(`[filter] BỊ CHẶN: Từ khóa ngắn hơn 2 ký tự (chờ tiếp...)`);
+        }
+        return isValid;
+      })
+    );
+
+    const class$ = this.flowClassControl.valueChanges.pipe(
+      startWith(this.flowClassControl.value),
+      tap(val => this.addFlowLog(`[class filter] Chọn lớp: "${val}"`)),
+      distinctUntilChanged()
+    );
+
+    const status$ = this.flowStatusControl.valueChanges.pipe(
+      startWith(this.flowStatusControl.value),
+      tap(val => this.addFlowLog(`[status filter] Chọn trạng thái: "${val}"`)),
+      distinctUntilChanged()
+    );
+
+    combineLatest([search$, class$, status$]).pipe(
+      takeUntil(this.destroy$),
+      tap(([q, c, s]) => {
+        this.addFlowLog(`[combineLatest] Gộp các bộ lọc: [Từ khóa: "${q}", Lớp: "${c}", Trạng thái: "${s}"]`);
+        this.flowIsLoading = true;
+      }),
+      switchMap(([q, c, s]) => {
+        this.addFlowLog(`[switchMap] Hủy request cũ (nếu có) và gửi HTTP request mới...`);
+        const errParam = this.flowSimulateError ? '500' : undefined;
+        return this.studentService.getStudentsWithErrorSimulation(errParam, false).pipe(
+          map(list => {
+            let filtered = list;
+            if (c !== 'ALL') filtered = filtered.filter(item => item.className === c);
+            if (s !== 'ALL') filtered = filtered.filter(item => item.status === s);
+            if (q) {
+              const query = q.toLowerCase();
+              filtered = filtered.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                item.id.toLowerCase().includes(query)
+              );
+            }
+            return filtered;
+          }),
+          retry(2),
+          catchError(err => {
+            this.addFlowLog(`[catchError] Lỗi API: ${err.message || 'Mất kết nối'}. Trả về [] để hồi phục.`);
+            return of([]);
+          }),
+          finalize(() => {
+            this.addFlowLog(`[finalize] Tắt trạng thái Loading.`);
+            this.flowIsLoading = false;
+          })
+        );
+      })
+    ).subscribe(results => {
+      this.flowResults = results;
+      this.addFlowLog(`[subscribe] Nhận kết quả! Tìm thấy ${results.length} sinh viên.`);
+      this.addLog('Flow Tổng hợp', `Tìm thấy ${results.length} kết quả`, 'success');
+    });
+  }
+
+  addFlowLog(msg: string): void {
+    const time = new Date().toLocaleTimeString();
+    this.flowLogs.unshift(`[${time}] ${msg}`);
+    if (this.flowLogs.length > 25) {
+      this.flowLogs.pop();
+    }
+  }
+
+  clearFlowLogs(): void {
+    this.flowLogs = [];
+  }
 
   // Shared Console Log helper
   addLog(source: string, value: string, type: LogItem['type']): void {
