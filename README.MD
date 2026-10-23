@@ -12,5 +12,6 @@
 | **Tuần 2** | Logic Đăng nhập, Validation Form, Lockout & User Table (Vanilla JS) | [🔗 Xem Demo](http://trantien.is-a.dev/tts-vtit/tuan2/login.html) | [tuan2/README.md](./tuan2/README.md) |
 | **Tuần 3/4** | Angular 19 SPA, Signals, Reactive Forms, LocalStorage CRUD & Guards | [🔗 Xem Demo](http://trantien.is-a.dev/tts-vtit/tuan3/output) | [tuan3/README.md](./tuan3/README.md) |
 | **Tuần 5** | Angular 19 SPA ghép REST API, HttpClient, Phân trang & Fallback API | [🔗 Xem Demo](http://trantien.is-a.dev/tts-vtit/tuan5/output) | [tuan5/README.md](./tuan5/README.md) |
+| **Task2** | Tìm hiểu RxJS, NgZorro và áp dụng vào dự án Angular | [🔗 Xem Demo](http://trantien.is-a.dev/tts-vtit/task2/output) | [Task2](./task2/README.md)
 ---
 
