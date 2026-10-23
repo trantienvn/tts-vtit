@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "tuan2-angular": {
+    "task2-rxjs-ngzorro": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:class": {
@@ -59,8 +59,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "1.5MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -82,10 +82,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "tuan2-angular:build:production"
+              "buildTarget": "task2-rxjs-ngzorro:build:production"
             },
             "development": {
-              "buildTarget": "tuan2-angular:build:development"
+              "buildTarget": "task2-rxjs-ngzorro:build:development"
             }
           },
           "defaultConfiguration": "development"

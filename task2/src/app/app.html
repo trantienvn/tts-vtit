@@ -1,1 +1,14 @@
-<router-outlet />
+<div class="shell">
+  <header class="topbar"><div class="brand"><span class="brand-mark">V</span><div><b>Viettel CRM</b><small>Customer workspace</small></div></div><button nz-button nzType="default" (click)="reload()">↻ Làm mới</button></header>
+  <main>
+    <section class="intro"><div><span class="eyebrow">ANGULAR • RXJS • NG-ZORRO</span><h1>Quản lý khách hàng</h1><p>Tìm kiếm phản hồi nhanh, lọc trạng thái và phối hợp luồng dữ liệu với RxJS.</p></div><button nz-button nzType="primary">＋ Thêm khách hàng</button></section>
+    <ng-container *ngIf="summary$ | async as summary"><section class="stats"><nz-card><small>Tổng khách hàng</small><strong>{{ summary.total }}</strong></nz-card><nz-card><small>Đang hoạt động</small><strong class="green">{{ summary.active }}</strong></nz-card><nz-card><small>Chờ xử lý</small><strong class="amber">{{ summary.waiting }}</strong></nz-card></section></ng-container>
+    <nz-card class="directory" nzTitle="Danh sách khách hàng" [nzExtra]="extra">
+      <ng-template #extra><span class="live"><i></i> Dữ liệu đồng bộ</span></ng-template>
+      <div class="filters"><label class="search"><span>⌕</span><input nz-input [formControl]="search" placeholder="Tìm theo tên, email hoặc công ty..."></label><nz-select [formControl]="status" aria-label="Lọc trạng thái"><nz-option nzValue="Tất cả" nzLabel="Tất cả trạng thái"></nz-option><nz-option nzValue="Hoạt động" nzLabel="Hoạt động"></nz-option><nz-option nzValue="Chờ xử lý" nzLabel="Chờ xử lý"></nz-option><nz-option nzValue="Tạm dừng" nzLabel="Tạm dừng"></nz-option></nz-select></div>
+      <ng-container *ngIf="customers$ | async as customers"><nz-table #table [nzData]="customers" [nzPageSize]="6" [nzShowPagination]="true"><thead><tr><th>Khách hàng</th><th>Công ty</th><th>Trạng thái</th><th>Mã hồ sơ</th></tr></thead><tbody><tr *ngFor="let row of table.data"><td><div class="person"><span class="avatar">{{ row.name.charAt(0) }}</span><span><b>{{ row.name }}</b><small>{{ row.email }}</small></span></div></td><td>{{ row.company }}</td><td><nz-tag [nzColor]="row.status === 'Hoạt động' ? 'green' : row.status === 'Chờ xử lý' ? 'gold' : 'default'">{{ row.status }}</nz-tag></td><td class="code">CUS-{{ row.id.toString().padStart(4, '0') }}</td></tr></tbody></nz-table><div *ngIf="customers.length === 0" class="empty">Không tìm thấy khách hàng phù hợp.</div></ng-container>
+    </nz-card>
+    <nz-alert nzType="info" nzShowIcon nzMessage="RxJS demo" nzDescription="debounceTime + distinctUntilChanged giảm truy vấn thừa; switchMap hủy luồng tìm kiếm cũ; catchError giữ giao diện ổn định khi có lỗi." ></nz-alert>
+  </main>
+  <footer> <span>Observable · Subject · switchMap · debounceTime · catchError</span></footer>
+</div>
