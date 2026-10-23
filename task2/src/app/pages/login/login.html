@@ -1,0 +1,162 @@
+<div class="login-page">
+  <div class="lang-bar">
+    <button class="lang-btn" type="button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z" />
+      </svg>
+      Tiếng Việt
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="blob-bg"></div>
+
+  <div class="page">
+    <!-- LEFT -->
+    <div class="left-area">
+      <div class="illus-wrap">
+        <img src="assets/image.png" alt="VSS Chat Platform" class="illus-img" />
+      </div>
+      <h2 class="left-title">Hệ thống quản lý chat đa nền tảng</h2>
+      <p class="left-sub">Tiết kiệm thời gian tư vấn và chăm sóc khách hàng</p>
+      <div class="dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-area">
+      <div class="form-card">
+
+        <!-- Brand -->
+        <div class="brand">
+          <svg class="brand-icon" viewBox="0 0 52 52" fill="none">
+            <rect width="52" height="52" rx="13" fill="#EE0033" />
+            <path d="M10 16a5 5 0 015-5h22a5 5 0 015 5v14a5 5 0 01-5 5H29l-3 5-3-5H15a5 5 0 01-5-5V16z" fill="white" />
+            <circle cx="20" cy="23" r="3" fill="#EE0033" />
+            <circle cx="32" cy="23" r="3" fill="#EE0033" />
+            <circle cx="21.5" cy="21.5" r="1.2" fill="white" />
+            <circle cx="33.5" cy="21.5" r="1.2" fill="white" />
+            <line x1="20" y1="11" x2="18" y2="6" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+            <circle cx="17.5" cy="5" r="1.8" fill="white" />
+            <line x1="32" y1="11" x2="34" y2="6" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+            <circle cx="34.5" cy="5" r="1.8" fill="white" />
+          </svg>
+          <div>
+            <div class="brand-name">VSS</div>
+            <div class="brand-sub">Chat Platform</div>
+          </div>
+        </div>
+
+        <h1 class="form-title">Đăng nhập vào tài khoản của bạn</h1>
+
+        <!-- Lock alert -->
+        @if (locked()) {
+        <div class="alert alert-error">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          Tài khoản bị khóa. Thử lại sau <strong>{{ lockRemain() }}s</strong>
+        </div>
+        }
+
+        <!-- Error alert -->
+        @if (errorMsg() && !locked()) {
+        <div class="alert alert-warn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          {{ errorMsg() }}
+        </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+          <!-- Email -->
+          <div class="field">
+            <input type="email" class="inp" [class.error]="submitted() && email.invalid" formControlName="email"
+              placeholder="Nhập email" autocomplete="username" />
+            @if (submitted() && email.errors?.['required']) {
+            <span class="err-msg">Vui lòng nhập email</span>
+            } @else if (submitted() && email.errors?.['email']) {
+            <span class="err-msg">Email không đúng định dạng (VD: user&#64;example.com)</span>
+            } @else {
+            <span class="err-msg"></span>
+            }
+          </div>
+
+          <!-- Password -->
+          <div class="field pw-field">
+            <input [type]="showPassword() ? 'text' : 'password'" class="inp"
+              [class.error]="submitted() && password.invalid" formControlName="password" placeholder="Nhập mật khẩu"
+              autocomplete="current-password" />
+            <button type="button" class="eye-btn" (click)="togglePassword()" tabindex="-1">
+              @if (!showPassword()) {
+              <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+              } @else {
+              <svg class="eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              }
+            </button>
+            @if (submitted() && password.errors?.['required']) {
+            <span class="err-msg">Vui lòng nhập mật khẩu</span>
+            } @else if (submitted() && password.errors?.['minlength']) {
+            <span class="err-msg">Mật khẩu phải có ít nhất 6 ký tự</span>
+            } @else {
+            <span class="err-msg"></span>
+            }
+          </div>
+
+          <!-- Remember + Forgot -->
+          <div class="row-between">
+            <label class="cb-label" (click)="toggleRemember()">
+              <span class="cb-box" [class.checked]="rememberMe()"></span>
+              Lưu mật khẩu
+            </label>
+            <a href="#" class="link-red small">Quên mật khẩu?</a>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn-submit" [disabled]="loading() || locked()">
+            @if (loading()) {
+            <span class="spinner"></span> Đang đăng nhập...
+            } @else {
+            Đăng nhập
+            }
+          </button>
+
+          <p class="switch-text">
+            Bạn chưa có tài khoản?
+            <a href="#" class="link-red">Đăng ký</a>
+          </p>
+        </form>
+
+        <div class="demo-hint">
+          <strong>Demo:</strong> admin&#64;vss.com / Admin&#64;123
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
